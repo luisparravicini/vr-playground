@@ -6,10 +6,6 @@
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<link type="text/css" rel="stylesheet" href="main.css">
 		<style>
-			body {
-				background-color: #bfe3dd;
-				color: #000;
-			}
 
 			a {
 				color: #2983ff;
@@ -69,7 +65,7 @@
 			const pmremGenerator = new THREE.PMREMGenerator( renderer );
 
 			const scene = new THREE.Scene();
-			scene.background = new THREE.Color( 0xbfe3dd );
+			scene.background = new THREE.Color( 0x101010 );
 			scene.environment = pmremGenerator.fromScene( new RoomEnvironment(), 0.04 ).texture;
 
 			const camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 1, 100 );
@@ -87,9 +83,8 @@
 			const loader = new GLTFLoader();
 			loader.setDRACOLoader( dracoLoader );
 			loader.load( 'models/earth.glb', function ( gltf ) {
-
 				const model = gltf.scene;
-				model.position.set( 0, 0, 0 );
+				model.position.set( 0, 0, -5 );
 				model.scale.set( 0.01, 0.01, 0.01 );
 				scene.add(model);
 
@@ -98,14 +93,11 @@
 				// mixer.clipAction( gltf.animations[ 0 ] ).play();
 
 				// animate();
-
 			}, undefined, function ( e ) {
-
 				console.error( e );
-
 			} );
 
-      document.body.appendChild( VRButton.createButton( renderer ) );
+      document.body.appendChild(VRButton.createButton(renderer));
       renderer.xr.enabled = true;
       renderer.setAnimationLoop( function () {
         renderer.render( scene, camera );

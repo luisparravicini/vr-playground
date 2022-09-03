@@ -5,22 +5,25 @@ import { VRButton } from 'three/addons/webxr/VRButton.js';
 import { XRControllerModelFactory } from 'three/addons/webxr/XRControllerModelFactory.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+import { ObjectDragger } from './drag.js';
 
 let container;
 let camera, scene, renderer;
-let controller1, controller2;
-let controllerGrip1, controllerGrip2;
 const box = new THREE.Box3();
 let stats;
 
-const controllers = [];
+const connectedControllers = [];
 const oscillators = [];
 let controls, group;
 let audioCtx = null;
+let renderCallbacks = [];
 
 
-init();
+const controllers = init();
 renderer.setAnimationLoop(render);
+const objectDragger = new ObjectDragger();
+let initData = objectDragger.init(scene, controllers, renderCallbacks);
+renderCallbacks.push(initData.render);
 
 
 function initAudio() {
@@ -71,38 +74,44 @@ function init() {
     renderer.shadowMap.enabled = true;
     container.appendChild(renderer.domElement);
 
-    setupXR();
+    const controllers = setupXR();
 
     document.getElementById('VRButton').addEventListener('click', () => {
         initAudio();
     });
 
     window.addEventListener('resize', onWindowResize);
+
+    return controllers;
 }
 
 function setupXR() {
     renderer.xr.enabled = true;
     document.body.appendChild(VRButton.createButton(renderer));
 
-    controller1 = renderer.xr.getController(0);
-    scene.add(controller1);
-
-    controller2 = renderer.xr.getController(1);
-    scene.add(controller2);
-
     const controllerModelFactory = new XRControllerModelFactory();
 
-    controllerGrip1 = renderer.xr.getControllerGrip(0);
-    controllerGrip1.addEventListener('connected', controllerConnected);
-    controllerGrip1.addEventListener('disconnected', controllerDisconnected);
-    controllerGrip1.add(controllerModelFactory.createControllerModel(controllerGrip1));
-    scene.add(controllerGrip1);
+    const setupController = function (controllerIndex) {
+        const controller = renderer.xr.getController(controllerIndex);
+        scene.add(controller);
 
-    controllerGrip2 = renderer.xr.getControllerGrip(1);
-    controllerGrip2.addEventListener('connected', controllerConnected);
-    controllerGrip2.addEventListener('disconnected', controllerDisconnected);
-    controllerGrip2.add(controllerModelFactory.createControllerModel(controllerGrip2));
-    scene.add(controllerGrip2);
+        const grip = renderer.xr.getControllerGrip(controllerIndex);
+        grip.addEventListener('connected', controllerConnected);
+        grip.addEventListener('disconnected', controllerDisconnected);
+        grip.add(controllerModelFactory.createControllerModel(grip));
+        scene.add(grip);
+
+        return {
+            controller: controller,
+            grip: grip,
+            index: controllerIndex,
+        }
+    }
+
+    return {
+        left: setupController(0),
+        right: setupController(1),
+    }
 }
 
 function setupScene() {
@@ -184,7 +193,7 @@ function initBars() {
 }
 
 function controllerConnected(evt) {
-    controllers.push({
+    connectedControllers.push({
         gamepad: evt.data.gamepad,
         grip: evt.target,
         colliding: false,
@@ -193,9 +202,9 @@ function controllerConnected(evt) {
 }
 
 function controllerDisconnected(evt) {
-    const index = controllers.findIndex(o => o.controller === evt.target);
+    const index = connectedControllers.findIndex(o => o.controller === evt.target);
     if (index !== - 1) {
-        controllers.splice(index, 1);
+        connectedControllers.splice(index, 1);
     }
 }
 
@@ -211,8 +220,8 @@ function handleCollisions() {
         group.children[i].collided = false;
     }
 
-    for (let g = 0; g < controllers.length; g++) {
-        const controller = controllers[g];
+    for (let g = 0; g < connectedControllers.length; g++) {
+        const controller = connectedControllers[g];
         controller.colliding = false;
 
         const { grip, gamepad } = controller;
@@ -272,6 +281,9 @@ function handleCollisions() {
 
 function render() {
     handleCollisions();
+
+    renderCallbacks.forEach(r => r());
+
     renderer.render(scene, camera);
     stats.update();
 }

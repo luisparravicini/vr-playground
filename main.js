@@ -18,11 +18,10 @@ const oscillators = [];
 let controls, group;
 let audioCtx = null;
 
-// minor pentatonic scale, so whichever notes is striked would be more pleasant
-const musicScale = [0, 3, 5, 7, 10];
 
 init();
-animate();
+renderer.setAnimationLoop(render);
+
 
 function initAudio() {
     if (audioCtx !== null) {
@@ -207,10 +206,6 @@ function onWindowResize() {
     renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
-function animate() {
-    renderer.setAnimationLoop(render);
-}
-
 function handleCollisions() {
     for (let i = 0; i < group.children.length; i++) {
         group.children[i].collided = false;
@@ -227,6 +222,9 @@ function handleCollisions() {
         };
 
         const supportHaptic = 'hapticActuators' in gamepad && gamepad.hapticActuators != null && gamepad.hapticActuators.length > 0;
+
+        // minor pentatonic scale, so whichever notes is striked would be more pleasant
+        const musicScale = [0, 3, 5, 7, 10];
 
         for (let i = 0; i < group.children.length; i++) {
             const child = group.children[i];

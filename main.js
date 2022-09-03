@@ -7,6 +7,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { ObjectDragger } from './drag.js';
 import { HapticsSample } from './haptics.js';
+import * as ThreeMeshUI from "three-mesh-ui";
 
 let stats;
 let camera, scene, renderer;
@@ -19,6 +20,20 @@ renderer.setAnimationLoop(render);
 
 setupSample(new ObjectDragger());
 setupSample(new HapticsSample());
+
+const container = new ThreeMeshUI.Block({
+    width: 1.2,
+    height: 0.7,
+    padding: 0.1,
+    fontFamily: './assets/Roboto-msdf.json',
+    fontTexture: './assets/Roboto-msdf.png',
+});
+const text = new ThreeMeshUI.Text({
+    content: "controller buttons"
+});
+container.position.set(0, 2, -2);
+container.add(text);
+scene.add(container);
 
 
 function setupSample(obj) {
@@ -77,6 +92,8 @@ function setupXR() {
         scene.add(controller);
 
         const grip = renderer.xr.getControllerGrip(controllerIndex);
+        grip.addEventListener('connected', controllerConnected);
+        grip.addEventListener('disconnected', controllerDisconnected);
         grip.add(controllerModelFactory.createControllerModel(grip));
         scene.add(grip);
 
@@ -84,6 +101,7 @@ function setupXR() {
             controller: controller,
             grip: grip,
             index: controllerIndex,
+            gamepad: null,
         }
     }
 
@@ -91,6 +109,23 @@ function setupXR() {
         left: setupController(0),
         right: setupController(1),
     }
+}
+
+function controllerConnected(event) {
+    updateControllerData(event.data, event.data.gamepad);
+}
+
+function controllerDisconnected(event) {
+    updateControllerData(event.data, null);
+}
+
+function updateControllerData(eventData, gamepadData) {
+    const handedness = eventData.handedness;
+
+    if (handedness == 'left')
+        controllers.left.gamepad = gamepadData;
+    else if (handedness == 'right')
+        controllers.right.gamepad = gamepadData;
 }
 
 function setupScene() {
@@ -148,10 +183,22 @@ function onWindowResize() {
     renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
-
 function render() {
     renderCallbacks.forEach(r => r());
 
-    renderer.render(scene, camera);
+    if (controllers.left.gamepad != null) {
+        const boolToStr = value => value ? "1" : "x";
+        const twoDecimalTrunc = x => Math.trunc(x * 100) / 100;
+
+        const buttonsValues = [];
+        controllers.left.gamepad.buttons.forEach((btn, index) => {
+            buttonsValues.push(`${index}: pressed:${boolToStr(btn.pressed)} touched:${boolToStr(btn.touched)} value:${twoDecimalTrunc(btn.value)}`);
+        })
+
+        text.set({ content: "left\n" + buttonsValues.join("\n") });
+    }
+    ThreeMeshUI.update();
     stats.update();
+
+    renderer.render(scene, camera);
 }

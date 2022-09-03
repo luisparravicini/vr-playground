@@ -1,11 +1,11 @@
 This is a playground to learn threejs + XR.
 
-It's a mashup of own code, some three js examples, some code from [xr-locomotion-start](https://github.com/SamsungInternet/xr-locomotion-starter) and some other snippets.
+It's a mashup of own code, some three js examples, some code from [xr-locomotion-start](https://github.com/SamsungInternet/xr-locomotion-starter), the ui is done with [three-mesh-ui](https://github.com/felixmariotto/three-mesh-ui) and there are some other snippets around.
 
 
 To use it:
 
-- Install threejs in the project folder: `npm install three`
+- Install dependencies: `npm install`
 - Start up a https server to serve index.html. You can use `http-server.py`
 
 
@@ -17,5 +17,4 @@ To use it:
 - Add teleport system from xr-locomotion-start
 - Add some more segments to the line shown in xr-locomotion-start
 - Add build system from xr-locomotion-start
-- Add ui from https://github.com/felixmariotto/three-mesh-ui
 - Replace current drag line selection with line and circle at end from https://github.com/felixmariotto/three-mesh-ui

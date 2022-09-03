@@ -1,0 +1,23 @@
+{
+  "name": "vr-playground",
+  "version": "1.0.0",
+  "description": "This is a playground to learn threejs + XR.",
+  "main": "main.js",
+  "dependencies": {
+    "three": "^0.144.0",
+    "three-mesh-ui": "^6.4.5"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/luisparravicini/vr-playground.git"
+  },
+  "author": "Luis Parravicini",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/luisparravicini/vr-playground/issues"
+  },
+  "homepage": "https://github.com/luisparravicini/vr-playground#readme"
+}

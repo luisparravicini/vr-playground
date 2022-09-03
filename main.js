@@ -6,47 +6,31 @@ import { XRControllerModelFactory } from 'three/addons/webxr/XRControllerModelFa
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { ObjectDragger } from './drag.js';
+import { HapticsSample } from './haptics.js';
 
-let container;
-let camera, scene, renderer;
-const box = new THREE.Box3();
 let stats;
-
-const connectedControllers = [];
-const oscillators = [];
-let controls, group;
-let audioCtx = null;
+let camera, scene, renderer;
 let renderCallbacks = [];
+let enterVRCallbacks = [];
 
 
 const controllers = init();
 renderer.setAnimationLoop(render);
-const objectDragger = new ObjectDragger();
-let initData = objectDragger.init(scene, controllers, renderCallbacks);
-renderCallbacks.push(initData.render);
+
+setupSample(new ObjectDragger());
+setupSample(new HapticsSample());
 
 
-function initAudio() {
-    if (audioCtx !== null) {
-        return;
-    }
-
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    function createOscillator() {
-        // creates oscillator
-        const oscillator = audioCtx.createOscillator();
-        oscillator.type = 'sine'; // possible values: sine, triangle, square
-        oscillator.start();
-        return oscillator;
-    }
-
-    oscillators.push(createOscillator());
-    oscillators.push(createOscillator());
-    window.oscillators = oscillators;
+function setupSample(obj) {
+    let initData = obj.init(scene, controllers);
+    if (initData.render)
+        renderCallbacks.push(initData.render);
+    if (initData.enterVR)
+        enterVRCallbacks.push(initData.enterVR);
 }
 
 function init() {
-    container = document.createElement('div');
+    const container = document.createElement('div');
     document.body.appendChild(container);
 
     stats = new Stats();
@@ -58,13 +42,12 @@ function init() {
     camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 10);
     camera.position.set(0, 1.6, 3);
 
-    controls = new OrbitControls(camera, container);
+    const controls = new OrbitControls(camera, container);
     controls.target.set(0, 1.6, 0);
     controls.update();
 
     setupScene();
 
-    initBars();
     loadEarth();
 
     renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -77,7 +60,7 @@ function init() {
     const controllers = setupXR();
 
     document.getElementById('VRButton').addEventListener('click', () => {
-        initAudio();
+        enterVRCallbacks.forEach(callback => callback());
     });
 
     window.addEventListener('resize', onWindowResize);
@@ -96,8 +79,6 @@ function setupXR() {
         scene.add(controller);
 
         const grip = renderer.xr.getControllerGrip(controllerIndex);
-        grip.addEventListener('connected', controllerConnected);
-        grip.addEventListener('disconnected', controllerDisconnected);
         grip.add(controllerModelFactory.createControllerModel(grip));
         scene.add(grip);
 
@@ -161,52 +142,6 @@ function loadEarth() {
     });
 }
 
-function initBars() {
-    group = new THREE.Group();
-    group.position.z = - 0.5;
-    scene.add(group);
-    const BOXES = 10;
-
-    for (let i = 0; i < BOXES; i++) {
-        const intensity = (i + 1) / BOXES;
-        const w = 0.1;
-        const h = 0.1;
-        const minH = 1;
-        const geometry = new THREE.BoxGeometry(w, h * i + minH, w);
-        const material = new THREE.MeshStandardMaterial({
-            color: new THREE.Color(intensity, 0.1, 0.1),
-            roughness: 0.7,
-            metalness: 0.0
-        });
-
-        const object = new THREE.Mesh(geometry, material);
-        object.position.x = (i - 5) * (w + 0.05);
-        object.castShadow = true;
-        object.receiveShadow = true;
-        object.userData = {
-            index: i + 1,
-            intensity: intensity
-        };
-
-        group.add(object);
-    }
-}
-
-function controllerConnected(evt) {
-    connectedControllers.push({
-        gamepad: evt.data.gamepad,
-        grip: evt.target,
-        colliding: false,
-        playing: false
-    });
-}
-
-function controllerDisconnected(evt) {
-    const index = connectedControllers.findIndex(o => o.controller === evt.target);
-    if (index !== - 1) {
-        connectedControllers.splice(index, 1);
-    }
-}
 
 function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight;
@@ -215,73 +150,8 @@ function onWindowResize() {
     renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
-function handleCollisions() {
-    for (let i = 0; i < group.children.length; i++) {
-        group.children[i].collided = false;
-    }
-
-    for (let g = 0; g < connectedControllers.length; g++) {
-        const controller = connectedControllers[g];
-        controller.colliding = false;
-
-        const { grip, gamepad } = controller;
-        const sphere = {
-            radius: 0.03,
-            center: grip.position
-        };
-
-        const supportHaptic = 'hapticActuators' in gamepad && gamepad.hapticActuators != null && gamepad.hapticActuators.length > 0;
-
-        // minor pentatonic scale, so whichever notes is striked would be more pleasant
-        const musicScale = [0, 3, 5, 7, 10];
-
-        for (let i = 0; i < group.children.length; i++) {
-            const child = group.children[i];
-            box.setFromObject(child);
-            if (box.intersectsSphere(sphere)) {
-                child.material.emissive.b = 1;
-                const intensity = child.userData.index / group.children.length;
-                child.scale.setScalar(1 + Math.random() * 0.1 * intensity);
-
-                if (supportHaptic) {
-                    gamepad.hapticActuators[0].pulse(intensity, 100);
-                }
-
-                const musicInterval = musicScale[child.userData.index % musicScale.length] + 12 * Math.floor(child.userData.index / musicScale.length);
-                oscillators[g].frequency.value = 110 * Math.pow(2, musicInterval / 12);
-                controller.colliding = true;
-                group.children[i].collided = true;
-            }
-        }
-
-
-        if (controller.colliding) {
-            if (!controller.playing) {
-                controller.playing = true;
-                oscillators[g].connect(audioCtx.destination);
-            }
-        } else {
-            if (controller.playing) {
-                controller.playing = false;
-                oscillators[g].disconnect(audioCtx.destination);
-            }
-        }
-    }
-
-    for (let i = 0; i < group.children.length; i++) {
-        const child = group.children[i];
-        if (!child.collided) {
-
-            // reset uncollided boxes
-            child.material.emissive.b = 0;
-            child.scale.setScalar(1);
-        }
-    }
-}
 
 function render() {
-    handleCollisions();
-
     renderCallbacks.forEach(r => r());
 
     renderer.render(scene, camera);

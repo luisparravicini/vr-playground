@@ -11,6 +11,7 @@ let camera, scene, renderer;
 let controller1, controller2;
 let controllerGrip1, controllerGrip2;
 const box = new THREE.Box3();
+let stats;
 
 const controllers = [];
 const oscillators = [];
@@ -46,7 +47,7 @@ function init() {
     container = document.createElement('div');
     document.body.appendChild(container);
 
-    const stats = new Stats();
+    stats = new Stats();
     container.appendChild(stats.dom);
 
     scene = new THREE.Scene();
@@ -59,6 +60,53 @@ function init() {
     controls.target.set(0, 1.6, 0);
     controls.update();
 
+    setupScene();
+
+    initBars();
+    loadEarth();
+
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.shadowMap.enabled = true;
+    container.appendChild(renderer.domElement);
+
+    setupXR();
+
+    document.getElementById('VRButton').addEventListener('click', () => {
+        initAudio();
+    });
+
+    window.addEventListener('resize', onWindowResize);
+}
+
+function setupXR() {
+    renderer.xr.enabled = true;
+    document.body.appendChild(VRButton.createButton(renderer));
+
+    controller1 = renderer.xr.getController(0);
+    scene.add(controller1);
+
+    controller2 = renderer.xr.getController(1);
+    scene.add(controller2);
+
+    const controllerModelFactory = new XRControllerModelFactory();
+
+    controllerGrip1 = renderer.xr.getControllerGrip(0);
+    controllerGrip1.addEventListener('connected', controllerConnected);
+    controllerGrip1.addEventListener('disconnected', controllerDisconnected);
+    controllerGrip1.add(controllerModelFactory.createControllerModel(controllerGrip1));
+    scene.add(controllerGrip1);
+
+    controllerGrip2 = renderer.xr.getControllerGrip(1);
+    controllerGrip2.addEventListener('connected', controllerConnected);
+    controllerGrip2.addEventListener('disconnected', controllerDisconnected);
+    controllerGrip2.add(controllerModelFactory.createControllerModel(controllerGrip2));
+    scene.add(controllerGrip2);
+}
+
+function setupScene() {
     const floorGeometry = new THREE.PlaneGeometry(4, 4);
     const floorMaterial = new THREE.MeshStandardMaterial({
         color: 0xeeeeee,
@@ -81,7 +129,31 @@ function init() {
     light.shadow.camera.left = - 2;
     light.shadow.mapSize.set(4096, 4096);
     scene.add(light);
+}
 
+function loadEarth() {
+    const dracoLoader = new DRACOLoader();
+    dracoLoader.setDecoderPath('js/libs/draco/gltf/');
+
+    const loader = new GLTFLoader();
+    loader.setDRACOLoader(dracoLoader);
+    loader.load('models/earth.glb', function (gltf) {
+        const model = gltf.scene;
+        model.position.set(0, 0, -5);
+        model.scale.set(0.01, 0.01, 0.01);
+        scene.add(model);
+
+        // TODO: play cloud animations
+        // mixer = new THREE.AnimationMixer( model );
+        // mixer.clipAction( gltf.animations[ 0 ] ).play();
+
+        // animate();
+    }, undefined, function (e) {
+        console.error(e);
+    });
+}
+
+function initBars() {
     group = new THREE.Group();
     group.position.z = - 0.5;
     scene.add(group);
@@ -110,67 +182,6 @@ function init() {
 
         group.add(object);
     }
-
-    const dracoLoader = new DRACOLoader();
-    dracoLoader.setDecoderPath('js/libs/draco/gltf/');
-
-    const loader = new GLTFLoader();
-    loader.setDRACOLoader(dracoLoader);
-    loader.load('models/earth.glb', function (gltf) {
-        const model = gltf.scene;
-        model.position.set(0, 0, -5);
-        model.scale.set(0.01, 0.01, 0.01);
-        scene.add(model);
-
-        // TODO: play cloud animations
-        // mixer = new THREE.AnimationMixer( model );
-        // mixer.clipAction( gltf.animations[ 0 ] ).play();
-
-        // animate();
-    }, undefined, function (e) {
-        console.error(e);
-    });
-
-    //
-
-    renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.outputEncoding = THREE.sRGBEncoding;
-    renderer.shadowMap.enabled = true;
-    renderer.xr.enabled = true;
-    container.appendChild(renderer.domElement);
-
-    document.body.appendChild(VRButton.createButton(renderer));
-
-    document.getElementById('VRButton').addEventListener('click', () => {
-        initAudio();
-    });
-
-    // controllers
-
-    controller1 = renderer.xr.getController(0);
-    scene.add(controller1);
-
-    controller2 = renderer.xr.getController(1);
-    scene.add(controller2);
-
-    const controllerModelFactory = new XRControllerModelFactory();
-
-    controllerGrip1 = renderer.xr.getControllerGrip(0);
-    controllerGrip1.addEventListener('connected', controllerConnected);
-    controllerGrip1.addEventListener('disconnected', controllerDisconnected);
-    controllerGrip1.add(controllerModelFactory.createControllerModel(controllerGrip1));
-    scene.add(controllerGrip1);
-
-    controllerGrip2 = renderer.xr.getControllerGrip(1);
-    controllerGrip2.addEventListener('connected', controllerConnected);
-    controllerGrip2.addEventListener('disconnected', controllerDisconnected);
-    controllerGrip2.add(controllerModelFactory.createControllerModel(controllerGrip2));
-    scene.add(controllerGrip2);
-    //
-
-    window.addEventListener('resize', onWindowResize);
 }
 
 function controllerConnected(evt) {
@@ -183,12 +194,10 @@ function controllerConnected(evt) {
 }
 
 function controllerDisconnected(evt) {
-
     const index = controllers.findIndex(o => o.controller === evt.target);
     if (index !== - 1) {
         controllers.splice(index, 1);
     }
-
 }
 
 function onWindowResize() {
@@ -197,8 +206,6 @@ function onWindowResize() {
 
     renderer.setSize(window.innerWidth, window.innerHeight);
 }
-
-//
 
 function animate() {
     renderer.setAnimationLoop(render);
@@ -268,4 +275,5 @@ function handleCollisions() {
 function render() {
     handleCollisions();
     renderer.render(scene, camera);
+    stats.update();
 }

@@ -1,6 +1,10 @@
+This is a playground to learn threejs + XR.
 
-- install threejs: `npm install three`
+To use it:
+
+- Install threejs in the project folder: `npm install three`
+- Start up a https server to serve index.html. You can use `http-server.py`
 
 
 ## Credits
-- Earth by Akshat is licensed under Creative Commons Attribution
+- Earth model by Akshat is licensed under Creative Commons Attribution

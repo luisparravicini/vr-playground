@@ -57,20 +57,18 @@ function init() {
     renderer.shadowMap.enabled = true;
     container.appendChild(renderer.domElement);
 
-    const controllers = setupXR();
-
-    document.getElementById('VRButton').addEventListener('click', () => {
-        enterVRCallbacks.forEach(callback => callback());
-    });
-
     window.addEventListener('resize', onWindowResize);
 
-    return controllers;
+    return setupXR();
 }
 
 function setupXR() {
     renderer.xr.enabled = true;
     document.body.appendChild(VRButton.createButton(renderer));
+
+    document.getElementById('VRButton').addEventListener('click', () => {
+        enterVRCallbacks.forEach(callback => callback());
+    });
 
     const controllerModelFactory = new XRControllerModelFactory();
 

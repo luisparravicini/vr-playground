@@ -6,22 +6,22 @@ const tempMatrix = new THREE.Matrix4();
 let controllers;
 let group;
 let line;
+const MaxLineScale = 5;
 
 export class ObjectDragger {
     init(scene, curControllers) {
         controllers = curControllers;
+        group = initDragObjects(scene);
         raycaster = new THREE.Raycaster();
 
         const geometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, - 1)]);
         line = new THREE.Line(geometry);
         line.name = 'line';
-        line.scale.z = 5;
-
-        group = initDragObjects(scene);
+        line.scale.z = MaxLineScale;
 
         [controllers.left, controllers.right].forEach(controller => {
-            controller.grip.addEventListener('selectstart', onSelectStart);
-            controller.grip.addEventListener('selectend', onSelectEnd);
+            controller.controller.addEventListener('selectstart', onSelectStart);
+            controller.controller.addEventListener('selectend', onSelectEnd);
             controller.controller.add(line.clone());
         });
 
@@ -44,7 +44,6 @@ function initDragObjects(scene) {
     ];
 
     for (let i = 0; i < 25; i++) {
-
         const geometry = geometries[Math.floor(Math.random() * geometries.length)];
         const material = new THREE.MeshStandardMaterial({
             color: Math.random() * 0xffffff,
@@ -72,7 +71,6 @@ function initDragObjects(scene) {
 
     return group;
 }
-
 
 function onSelectStart(event) {
     const controller = event.target;
@@ -114,9 +112,8 @@ function intersectObjects(controller) {
     // Do not highlight when already selected
     if (controller.userData.selected !== undefined) return;
 
-    const line = controller.getObjectByName('line');
     const intersections = getIntersections(controller);
-
+    let lineScale = MaxLineScale;
     if (intersections.length > 0) {
         const intersection = intersections[0];
 
@@ -124,14 +121,15 @@ function intersectObjects(controller) {
         object.material.emissive.r = 1;
         intersected.push(object);
 
-        line.scale.z = intersection.distance;
-    } else {
-        line.scale.z = 5;
+        lineScale = intersection.distance;
     }
+
+    const line = controller.getObjectByName('line');
+    line.scale.z = lineScale;
 }
 
 function cleanIntersected() {
-    while (intersected.length) {
+    while (intersected.length > 0) {
         const object = intersected.pop();
         object.material.emissive.r = 0;
     }

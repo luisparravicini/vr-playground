@@ -1,5 +1,6 @@
 import * as ThreeMeshUI from "three-mesh-ui";
 import * as THREE from 'three';
+import { ButtonsIndices } from './controllers.js';
 
 let container;
 let text;
@@ -24,44 +25,8 @@ export function setup(controllers) {
     controllers.left.controller.attach(container);
 }
 
-const buttonsIndices = {
-    trigger: 0,
-    grab: 1,
-    stickX: 2,
-    stickY: 3,
-    x: 4,
-    y: 5,
-    a: 4,
-    b: 5,
-};
-
-function updateButtonsPressed(controller) {
-    const gamepad = controller.gamepad;
-    if (gamepad == null)
-        return;
-
-    gamepad.buttons.forEach((button, index) => {
-        const nowPressed = button.pressed;
-        const curButtonData = controller.data.buttonsPressed[index];
-
-        if (!curButtonData) {
-            controller.data.buttonsPressed[index] = {
-                lastValue: nowPressed,
-                pressed: false,
-            };
-        } else {
-            curButtonData.pressed = (curButtonData.lastValue && !nowPressed);
-            curButtonData.lastValue = nowPressed;
-        }
-    });
-}
-
 export function update(controllers) {
-    updateButtonsPressed(controllers.left);
-    updateButtonsPressed(controllers.right);
-
-    const buttonsInfo = controllers.left.data.buttonsPressed;
-    if (buttonsInfo[buttonsIndices.y]?.pressed) {
+    if (controllers.left.isButtonPressed(ButtonsIndices.y)) {
         container.visible = !container.visible;
     }
 

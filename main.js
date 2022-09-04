@@ -2,11 +2,11 @@ import * as THREE from 'three';
 import Stats from 'three/addons/libs/stats.module.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { VRButton } from 'three/addons/webxr/VRButton.js';
-import { XRControllerModelFactory } from 'three/addons/webxr/XRControllerModelFactory.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { ObjectDragger } from './drag.js';
 import { HapticsSample } from './haptics.js';
+import { ControllersManager } from './controllers.js';
 import * as UI from './ui.js';
 
 let stats;
@@ -15,7 +15,8 @@ let renderCallbacks = [];
 let enterVRCallbacks = [];
 
 
-const controllers = init();
+const controllersManager = init();
+const controllers = controllersManager.controllers;
 renderer.setAnimationLoop(render);
 
 setupSample(new ObjectDragger());
@@ -72,54 +73,10 @@ function setupXR() {
         enterVRCallbacks.forEach(callback => callback());
     });
 
-    const controllerModelFactory = new XRControllerModelFactory();
+    const controllersManager = new ControllersManager();
+    controllersManager.setup(scene, renderer);
+    return controllersManager;
 
-    const setupController = function (controllerIndex) {
-        const controller = renderer.xr.getController(controllerIndex);
-        scene.add(controller);
-
-        const grip = renderer.xr.getControllerGrip(controllerIndex);
-        grip.addEventListener('connected', controllerConnected);
-        grip.addEventListener('disconnected', controllerDisconnected);
-        grip.add(controllerModelFactory.createControllerModel(grip));
-        scene.add(grip);
-
-        return {
-            controller: controller,
-            grip: grip,
-            index: controllerIndex,
-            gamepad: null,
-            data: {
-                buttonsPressed: {},
-            },
-        }
-    }
-
-    return {
-        right: setupController(0),
-        left: setupController(1),
-    }
-}
-
-function controllerConnected(event) {
-    updateControllerData(event.data, event.data.gamepad);
-}
-
-function controllerDisconnected(event) {
-    updateControllerData(event.data, null);
-}
-
-function updateControllerData(eventData, gamepadData) {
-    const handedness = eventData.handedness;
-
-    let controller;
-    if (handedness == 'left')
-        controller = controllers.left;
-    else if (handedness == 'right')
-        controller = controllers.right;
-
-    controller.gamepad = gamepadData;
-    controller.data.buttonsPressed = {};
 }
 
 function setupScene() {
@@ -178,7 +135,8 @@ function onWindowResize() {
 }
 
 function render() {
-    renderCallbacks.forEach(r => r());
+    controllersManager.update();
+    renderCallbacks.forEach(r => r(controllers));
 
     UI.update(controllers);
     stats.update();

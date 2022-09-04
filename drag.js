@@ -9,8 +9,7 @@ let line;
 const MaxLineScale = 5;
 
 export class ObjectDragger {
-    init(scene, curControllers) {
-        controllers = curControllers;
+    init(scene, controllers) {
         group = initDragObjects(scene);
         raycaster = new THREE.Raycaster();
 
@@ -136,7 +135,7 @@ function cleanIntersected() {
 }
 
 
-export function render() {
+export function render(controllers) {
     cleanIntersected();
 
     intersectObjects(controllers.left.controller);

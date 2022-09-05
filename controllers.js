@@ -11,6 +11,13 @@ export const ButtonsIndices = {
     b: 5,
 };
 
+export const AxesIndices = {
+    leftX: 2,
+    leftY: 3,
+    rightX: 0,
+    rightY: 1,
+};
+
 class Controller {
     constructor(controller, grip, controllerIndex) {
         this.controller = controller;

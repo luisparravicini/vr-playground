@@ -174,16 +174,19 @@ function updateButtonsInfo(controller) {
     const boolToStr = value => value ? "1" : "0";
     const oneDecimalTrunc = x => Math.trunc(x * 10) / 10;
 
-    const buttonsValues = [];
+    const info = [];
     controller.gamepad.buttons.forEach((btn, index) => {
-        buttonsValues.push(`${index}: ` +
+        info.push(`btn ${index}: ` +
             `pressed:${boolToStr(btn.pressed)} ` +
             `touched:${boolToStr(btn.touched)} ` +
             `value:${oneDecimalTrunc(btn.value)}`
         );
     })
+    controller.gamepad.axes.forEach((value, index) => {
+        info.push(`axis ${index}: ${oneDecimalTrunc(value)}`);
+    })
 
-    controller.data.menu.text.set({ content: "left\n" + buttonsValues.join("\n") });
+    controller.data.menu.text.set({ content: "left\n" + info.join("\n") });
 }
 
 export function update(scene, controllers) {

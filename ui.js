@@ -11,13 +11,10 @@ export function setup(scene, controllers) {
 }
 
 function setupHelpUI(scene) {
-    const container = new ThreeMeshUI.Block({
+    const container = buildTextContainer();
+    container.set({
         width: 0.5,
         height: 0.3,
-        padding: 0.05,
-        borderRadius: 0.05,
-        fontFamily: './assets/Roboto-msdf.json',
-        fontTexture: './assets/Roboto-msdf.png',
     });
     container.position.set(-1, 1, -1.8);
     container.rotation.y = 0.35;
@@ -30,13 +27,11 @@ function setupHelpUI(scene) {
 }
 
 function setupDebugUI(controller) {
-    container = new ThreeMeshUI.Block({
+    container = buildTextContainer();
+    container.set({
         width: 0.4,
         height: 0.4,
         padding: 0.1,
-        borderRadius: 0.05,
-        fontFamily: './assets/Roboto-msdf.json',
-        fontTexture: './assets/Roboto-msdf.png',
     });
     text = new ThreeMeshUI.Text({
         content: "controller buttons",
@@ -47,6 +42,17 @@ function setupDebugUI(controller) {
     container.add(text);
 
     controller.attach(container);
+}
+
+function buildTextContainer() {
+    return new ThreeMeshUI.Block({
+        width: 1,
+        height: 0.5,
+        padding: 0.05,
+        borderRadius: 0.05,
+        fontFamily: './assets/Roboto-msdf.json',
+        fontTexture: './assets/Roboto-msdf.png',
+    });
 }
 
 function updateButtonsInfo(controller, text) {

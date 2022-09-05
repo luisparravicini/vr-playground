@@ -25,26 +25,31 @@ export function setup(controllers) {
     controllers.left.controller.attach(container);
 }
 
+function updateButtonsInfo(controller, text) {
+    if (controller.gamepad == null)
+        return;
+
+    const boolToStr = value => value ? "1" : "0";
+    const oneDecimalTrunc = x => Math.trunc(x * 10) / 10;
+
+    const buttonsValues = [];
+    controller.gamepad.buttons.forEach((btn, index) => {
+        buttonsValues.push(`${index}: ` +
+            `pressed:${boolToStr(btn.pressed)} ` +
+            `touched:${boolToStr(btn.touched)} ` +
+            `value:${oneDecimalTrunc(btn.value)}`
+        );
+    })
+
+    text.set({ content: "left\n" + buttonsValues.join("\n") });
+}
+
 export function update(controllers) {
     if (controllers.left.isButtonPressed(ButtonsIndices.y)) {
         container.visible = !container.visible;
     }
 
-    if (controllers.left.gamepad != null) {
-        const boolToStr = value => value ? "1" : "0";
-        const oneDecimalTrunc = x => Math.trunc(x * 10) / 10;
-
-        const buttonsValues = [];
-        controllers.left.gamepad.buttons.forEach((btn, index) => {
-            buttonsValues.push(`${index}: ` +
-                `pressed:${boolToStr(btn.pressed)} ` +
-                `touched:${boolToStr(btn.touched)} ` +
-                `value:${oneDecimalTrunc(btn.value)}`
-            );
-        })
-
-        text.set({ content: "left\n" + buttonsValues.join("\n") });
-    }
+    updateButtonsInfo(controllers.left, text);
 
     ThreeMeshUI.update();
 }

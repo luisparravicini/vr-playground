@@ -50,22 +50,22 @@ class Controller {
 
         gamepad.buttons.forEach((button, index) => {
             const nowPressed = button.pressed;
-            const curButtonData = this.data.buttonsPressed[index];
+            const buttonsPressed = this.data.buttonsPressed;
 
-            if (!curButtonData) {
-                this.data.buttonsPressed[index] = {
-                    lastValue: nowPressed,
-                };
-            } else {
-                if (!curButtonData.lastValue && nowPressed) {
-                    this.dispatchEvent(index, 'button-$name-down', null);
-                }
-                if (curButtonData.lastValue && !nowPressed) {
-                    this.dispatchEvent(index, 'button-$name-up', null);
-                }
-
-                curButtonData.lastValue = nowPressed;
+            if (buttonsPressed[index] === undefined) {
+                buttonsPressed[index] = nowPressed;
+                return;
             }
+
+            const buttonPressed = buttonsPressed[index];
+            if (!buttonPressed && nowPressed) {
+                this.dispatchEvent(index, 'button-$name-down', null);
+            }
+            if (buttonPressed && !nowPressed) {
+                this.dispatchEvent(index, 'button-$name-up', null);
+            }
+
+            buttonsPressed[index] = nowPressed;
         });
     }
 

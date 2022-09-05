@@ -4,6 +4,7 @@
   "description": "This is a playground to learn threejs + XR.",
   "main": "main.js",
   "dependencies": {
+    "@tweenjs/tween.js": "^18.6.4",
     "three": "^0.144.0",
     "three-mesh-ui": "^6.4.5"
   },

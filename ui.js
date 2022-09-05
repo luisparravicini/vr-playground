@@ -16,6 +16,11 @@ export function setup(scene, controllers) {
     vrControl.controllers[0].addEventListener('selectend', () => {
         selectState = false;
     });
+
+    const controller = controllers.left;
+    controller.events.addEventListener('button-y-pressed', () => {
+        controller.data.menu.container.visible = !controller.data.menu.container.visible;
+    });
 }
 
 function setupHelpUI(scene) {
@@ -184,12 +189,7 @@ function updateButtonsInfo(controller) {
 export function update(scene, controllers) {
     ThreeMeshUI.update();
 
-    const controller = controllers.left;
-    if (controller.isButtonPressed(ButtonsIndices.y)) {
-        controller.data.menu.container.visible = !controller.data.menu.container.visible;
-    }
     updateButtonsInfo(controllers.left);
-
     updateButtons(scene);
 }
 

@@ -6,8 +6,10 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { ObjectDragger } from './drag.js';
 import { HapticsSample } from './haptics.js';
+// import { Teleport } from './teleport/teleport.js';
 import { ControllersManager } from './controllers.js';
 import * as UI from './ui.js';
+import TWEEN from '@tweenjs';
 
 let stats;
 let scene = {
@@ -25,6 +27,7 @@ scene.renderer.setAnimationLoop(render);
 
 setupSample(new ObjectDragger());
 setupSample(new HapticsSample());
+// setupSample(new Teleport());
 UI.setup(scene, controllers);
 
 
@@ -138,7 +141,9 @@ function onWindowResize() {
     renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
-function render() {
+function render(time, frame) {
+    TWEEN.update(time);
+
     controllersManager.update();
     renderCallbacks.forEach(r => r(scene, controllers));
 

@@ -26,6 +26,7 @@ class Controller {
         this.gamepad = null;
         this.data = {
             buttonsPressed: {},
+            axes: {},
         };
         this.events = new EventTarget();
     }
@@ -59,28 +60,61 @@ class Controller {
 
             const buttonPressed = buttonsPressed[index];
             if (!buttonPressed && nowPressed) {
-                this.dispatchEvent(index, 'button-$name-down', null);
+                this.dispatchButtonEvent(index, 'button-$name-down', null);
             }
             if (buttonPressed && !nowPressed) {
-                this.dispatchEvent(index, 'button-$name-up', null);
+                this.dispatchButtonEvent(index, 'button-$name-up', null);
             }
 
             buttonsPressed[index] = nowPressed;
         });
+
+        const axes = this.data.axes;
+        gamepad.axes.forEach((value, index) => {
+            if (axes[index] === undefined) {
+                axes[index] = value;
+                return;
+            }
+
+            if (value == axes[index]) {
+                return;
+            }
+
+            this.dispatchAxisEvent(index, "axes-$name-move", { value: value });
+
+            if (axes[index] === 0) {
+                this.dispatchAxisEvent(index, "axes-$name-moveStart", { value: value });
+            }
+            if (Math.abs(axes[index]) < 0.5 && Math.abs(value) > 0.5) {
+                this.dispatchAxisEvent(index, "axes-$name-moveMiddle", { value: value });
+            }
+            if (value === 0) {
+                this.dispatchAxisEvent(index, "axes-$name-moveEnd", { value: value });
+            }
+
+            axes[index] = value;
+        });
     }
 
-    dispatchEvent(buttonIndex, eventNameTemplate, detail) {
-        let button = Object.keys(ButtonsIndices).find(name => ButtonsIndices[name] == buttonIndex);
-        if (!button) {
+    dispatchAxisEvent(index, eventNameTemplate, detail) {
+        this.dispatchEvent('axis', AxesIndices, index, eventNameTemplate, detail);
+    }
+
+    dispatchButtonEvent(index, eventNameTemplate, detail) {
+        this.dispatchEvent('button', ButtonsIndices, index, eventNameTemplate, detail);
+    }
+
+    dispatchEvent(eventType, objects, index, eventNameTemplate, detail) {
+        let name = Object.keys(objects).find(name => objects[name] == index);
+        if (!name) {
             // This shouldn't happen
-            console.log(`button ${buttonIndex} not found`);
+            console.log(`${eventType} ${index} not found`);
             return;
         }
-        const eventName = eventNameTemplate.replace('$name', button);
+        const eventName = eventNameTemplate.replace('$name', name);
         const event = new CustomEvent(eventName, { detail: detail });
-        console.log(event.type + ' fired');
+        console.log(event.type + ' fired', detail);
         this.events.dispatchEvent(event);
-
     }
 
 }

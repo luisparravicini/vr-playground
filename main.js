@@ -21,7 +21,7 @@ renderer.setAnimationLoop(render);
 
 setupSample(new ObjectDragger());
 setupSample(new HapticsSample());
-UI.setup(controllers);
+UI.setup(scene, controllers);
 
 
 function setupSample(obj) {

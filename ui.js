@@ -5,7 +5,31 @@ import { ButtonsIndices } from './controllers.js';
 let container;
 let text;
 
-export function setup(controllers) {
+export function setup(scene, controllers) {
+    setupDebugUI(controllers.left.controller);
+    setupHelpUI(scene);
+}
+
+function setupHelpUI(scene) {
+    const container = new ThreeMeshUI.Block({
+        width: 0.5,
+        height: 0.3,
+        padding: 0.05,
+        borderRadius: 0.05,
+        fontFamily: './assets/Roboto-msdf.json',
+        fontTexture: './assets/Roboto-msdf.png',
+    });
+    container.position.set(-1, 1, -1.8);
+    container.rotation.y = 0.35;
+    scene.add(container);
+
+    container.add(new ThreeMeshUI.Text({
+        content: "Toggle the left controller menu with Y",
+        fontSize: 0.055,
+    }));
+}
+
+function setupDebugUI(controller) {
     container = new ThreeMeshUI.Block({
         width: 0.4,
         height: 0.4,
@@ -22,7 +46,7 @@ export function setup(controllers) {
     container.rotation.x = THREE.MathUtils.degToRad(-25);
     container.add(text);
 
-    controllers.left.controller.attach(container);
+    controller.attach(container);
 }
 
 function updateButtonsInfo(controller, text) {

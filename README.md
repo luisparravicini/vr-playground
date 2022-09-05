@@ -2,6 +2,7 @@ This is a playground to learn threejs + XR.
 
 It's a mashup of own code, some three js examples, some code from [xr-locomotion-start](https://github.com/SamsungInternet/xr-locomotion-starter), the ui is done with [three-mesh-ui](https://github.com/felixmariotto/three-mesh-ui) and there are some other snippets around.
 
+It was tested with a Quest 2.
 
 To use it:
 
@@ -17,5 +18,4 @@ To use it:
 - Add teleport system from xr-locomotion-start
 - Add some more segments to the line shown in xr-locomotion-start
 - Add build system from xr-locomotion-start
-- Add text mesh explaining how to use controller menu and hints
 - Replace current drag line selection with line and circle at end from https://github.com/felixmariotto/three-mesh-ui

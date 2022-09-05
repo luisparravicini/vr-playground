@@ -42,7 +42,7 @@ function init() {
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x808080);
 
-    camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 10);
+    camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 20);
     camera.position.set(0, 1.6, 3);
 
     const controls = new OrbitControls(camera, container);
@@ -80,9 +80,9 @@ function setupXR() {
 }
 
 function setupScene() {
-    const floorGeometry = new THREE.PlaneGeometry(4, 4);
+    const floorGeometry = new THREE.PlaneGeometry(20, 20);
     const floorMaterial = new THREE.MeshStandardMaterial({
-        color: 0xeeeeee,
+        color: 0x909090,
         roughness: 1.0,
         metalness: 0.0
     });
@@ -112,7 +112,7 @@ function loadEarth() {
     loader.setDRACOLoader(dracoLoader);
     loader.load('models/earth.glb', function (gltf) {
         const model = gltf.scene;
-        model.position.set(0, 0, -5);
+        model.position.set(0, 1, -5);
         model.scale.set(0.01, 0.01, 0.01);
         scene.add(model);
 

@@ -55,25 +55,29 @@ class Controller {
             if (!curButtonData) {
                 this.data.buttonsPressed[index] = {
                     lastValue: nowPressed,
-                    pressed: false,
                 };
             } else {
-                curButtonData.pressed = (curButtonData.lastValue && !nowPressed);
-                curButtonData.lastValue = nowPressed;
-
-                if (curButtonData.pressed) {
-                    let button = Object.keys(ButtonsIndices).find(name => ButtonsIndices[name] == index);
-                    if (!button) {
-                        // This shouldn't happen
-                        console.log(`button ${index} not found`);
-                        return;
-                    }
-                    const event = new CustomEvent(`button-${button}-pressed`, { detail: null });
-                    console.log(event.type + ' fired');
-                    this.events.dispatchEvent(event);
+                if (curButtonData.lastValue && !nowPressed) {
+                    this.dispatchEvent(index, 'button-$name-pressed', null);
                 }
+
+                curButtonData.lastValue = nowPressed;
             }
         });
+    }
+
+    dispatchEvent(buttonIndex, eventNameTemplate, detail) {
+        let button = Object.keys(ButtonsIndices).find(name => ButtonsIndices[name] == buttonIndex);
+        if (!button) {
+            // This shouldn't happen
+            console.log(`button ${buttonIndex} not found`);
+            return;
+        }
+        const eventName = eventNameTemplate.replace('$name', button);
+        const event = new CustomEvent(eventName, { detail: detail });
+        console.log(event.type + ' fired');
+        this.events.dispatchEvent(event);
+
     }
 
 }

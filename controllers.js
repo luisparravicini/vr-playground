@@ -57,8 +57,11 @@ class Controller {
                     lastValue: nowPressed,
                 };
             } else {
+                if (!curButtonData.lastValue && nowPressed) {
+                    this.dispatchEvent(index, 'button-$name-down', null);
+                }
                 if (curButtonData.lastValue && !nowPressed) {
-                    this.dispatchEvent(index, 'button-$name-pressed', null);
+                    this.dispatchEvent(index, 'button-$name-up', null);
                 }
 
                 curButtonData.lastValue = nowPressed;

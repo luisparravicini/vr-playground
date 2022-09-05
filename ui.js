@@ -18,7 +18,7 @@ export function setup(scene, controllers) {
     });
 
     const controller = controllers.left;
-    controller.events.addEventListener('button-y-pressed', () => {
+    controller.events.addEventListener('button-y-up', () => {
         controller.data.menu.container.visible = !controller.data.menu.container.visible;
     });
 }

@@ -18,5 +18,6 @@ To use it:
 - Add teleport system from xr-locomotion-start
 - Add some more segments to the line shown in xr-locomotion-start
 - Add build system from xr-locomotion-start
-- Adjust debug menu buttons
+- Adjust debug menu buttons to the bottom
+- Make the debug menu buttons do something
 - Replace current drag line selection with line and circle at end from https://github.com/felixmariotto/three-mesh-ui

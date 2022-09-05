@@ -57,17 +57,20 @@ function setupDebugUI(scene, controller) {
         text: text,
     }
     controller.controller.attach(container);
+
+    // for testing purposes
+    // container.position.set(0, 1, -1);
     // scene.scene.add(container);
 }
 
 function setupMenuButtons() {
     const buttonOptions = {
-        width: 0.4,
-        height: 0.2,
+        width: 0.2,
+        height: 0.05,
         justifyContent: 'center',
-        offset: 0.05,
-        margin: 0.02,
-        borderRadius: 0.075
+        offset: 0.03,
+        margin: 0.01,
+        borderRadius: 0.025
     };
 
     const hoveredStateAttributes = {
@@ -135,12 +138,12 @@ function setupMenuButtons() {
         contentDirection: 'row-reverse',
         fontFamily: './assets/Roboto-msdf.json',
         fontTexture: './assets/Roboto-msdf.png',
-        fontSize: 0.03,
-        padding: 0.02,
-        borderRadius: 0.11
+        fontSize: 0.02,
+        padding: 0.01,
+        borderRadius: 0.05
     });
 
-    container.position.set(0, -1, 0);
+    container.position.set(0, 0, 0);
 
     container.add(buttonNext, buttonPrevious);
     objsToTest.push(buttonNext, buttonPrevious);

@@ -6,7 +6,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { ObjectDragger } from './drag.js';
 import { HapticsSample } from './haptics.js';
-// import { Teleport } from './teleport/teleport.js';
+import { Teleport } from './teleport/teleport.js';
 import { ControllersManager } from './controllers.js';
 import * as UI from './ui.js';
 import TWEEN from '@tweenjs';
@@ -16,18 +16,24 @@ let scene = {
     camera: null,
     scene: null,
     renderer: null,
+    logger: null,
+    controls: null,
 }
 let renderCallbacks = [];
 let enterVRCallbacks = [];
 
 
-const controllersManager = init();
+const controllersManager = init(scene);
 const controllers = controllersManager.controllers;
+
+// for testing
+window.controllers = controllers;
+
 scene.renderer.setAnimationLoop(render);
 
 setupSample(new ObjectDragger());
 setupSample(new HapticsSample());
-// setupSample(new Teleport());
+setupSample(new Teleport());
 UI.setup(scene, controllers);
 
 
@@ -55,6 +61,8 @@ function init() {
     const controls = new OrbitControls(scene.camera, container);
     controls.target.set(0, 1.6, 0);
     controls.update();
+
+    scene.controls = controls;
 
     setupScene();
 
@@ -135,10 +143,10 @@ function loadEarth() {
 
 
 function onWindowResize() {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
+    scene.camera.aspect = window.innerWidth / window.innerHeight;
+    scene.camera.updateProjectionMatrix();
 
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    scene.renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
 function render(time, frame) {

@@ -15,7 +15,9 @@ To use it:
 
 
 ## TODO
-- Add teleport system from xr-locomotion-start
+- Finish adding teleport system from xr-locomotion-start
+- Camera rotation is now working
+- Add text on how to rotate camera with stick
 - Add some more segments to the line shown in xr-locomotion-start
 - Add build system from xr-locomotion-start
 - Adjust debug menu buttons to the bottom

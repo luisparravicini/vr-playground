@@ -12,20 +12,20 @@ export const ButtonsIndices = {
 };
 
 export const AxesIndices = {
-    leftX: 2,
-    leftY: 3,
-    rightX: 0,
-    rightY: 1,
+    x: 2,
+    y: 3,
 };
 
 class Controller {
-    constructor(controller, grip, controllerIndex) {
+    constructor(scene, controller, grip, name, controllerIndex) {
+        this.scene = scene;
         this.controller = controller;
         this.grip = grip;
         this.index = controllerIndex;
+        this.name = name;
         this.gamepad = null;
         this.data = {
-            buttonsPressed: {},
+            buttons: {},
             axes: {},
         };
         this.events = new EventTarget();
@@ -41,7 +41,8 @@ class Controller {
 
     updateControllerData(gamepadData) {
         this.gamepad = gamepadData;
-        this.data.buttonsPressed = {};
+        this.data.buttons = {};
+        this.data.axes = {};
     }
 
     updateButtonsPressed() {
@@ -51,7 +52,7 @@ class Controller {
 
         gamepad.buttons.forEach((button, index) => {
             const nowPressed = button.pressed;
-            const buttonsPressed = this.data.buttonsPressed;
+            const buttonsPressed = this.data.buttons;
 
             if (buttonsPressed[index] === undefined) {
                 buttonsPressed[index] = nowPressed;
@@ -113,7 +114,10 @@ class Controller {
         }
         const eventName = eventNameTemplate.replace('$name', name);
         const event = new CustomEvent(eventName, { detail: detail });
-        console.log(event.type + ' fired', detail);
+
+        console.log(`${this.name}:${event.type} fired`, detail);
+        this.scene.logger.info(`${this.name}:${event.type} fired`, detail);
+
         this.events.dispatchEvent(event);
     }
 
@@ -123,7 +127,7 @@ export class ControllersManager {
     setup(scene) {
         const controllerModelFactory = new XRControllerModelFactory();
 
-        const setupController = function (controllerIndex) {
+        const setupController = function (controllerIndex, name) {
             const controller = scene.renderer.xr.getController(controllerIndex);
             scene.scene.add(controller);
 
@@ -131,7 +135,7 @@ export class ControllersManager {
             grip.add(controllerModelFactory.createControllerModel(grip));
             scene.scene.add(grip);
 
-            const controllerObj = new Controller(controller, grip, controllerIndex);
+            const controllerObj = new Controller(scene, controller, grip, name, controllerIndex);
             grip.addEventListener('connected', (event) => { controllerObj.controllerConnected(event) });
             grip.addEventListener('disconnected', (event) => { controllerObj.controllerDisconnected(event) });
 
@@ -139,8 +143,8 @@ export class ControllersManager {
         }
 
         this.controllers = {
-            right: setupController(0),
-            left: setupController(1),
+            right: setupController(0, 'right'),
+            left: setupController(1, 'left'),
         }
     }
 

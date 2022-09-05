@@ -1,11 +1,11 @@
 import * as ThreeMeshUI from "three-mesh-ui";
 import * as THREE from 'three';
-import { ButtonsIndices } from './controllers.js';
 import VRControl from './VRControl.js';
 
 export function setup(scene, controllers) {
     setupDebugUI(scene, controllers.left);
-    setupHelpUI(scene.scene);
+    setupHelpUI(scene);
+    setupLogUI(scene);
 
     // for buttons
     vrControl = VRControl(scene.renderer, scene.camera, scene.scene);
@@ -31,12 +31,47 @@ function setupHelpUI(scene) {
     });
     container.position.set(-1, 1, -1.8);
     container.rotation.y = 0.35;
-    scene.add(container);
+    scene.scene.add(container);
 
     container.add(new ThreeMeshUI.Text({
         content: "Toggle the left controller menu with Y",
         fontSize: 0.055,
     }));
+}
+
+class Logger {
+    constructor(ui) {
+        this.ui = ui;
+        this.lines = [];
+        this.maxLines = 20;
+    }
+
+    info(message) {
+        this.lines.push(message);
+
+        if (this.lines.length > this.maxLines)
+            this.lines.shift();
+
+        this.ui.set({ content: this.lines.join("\n") });
+    }
+}
+function setupLogUI(scene) {
+    const container = buildTextContainer();
+    container.set({
+        width: 0.9,
+        height: 1.5,
+    });
+    container.position.set(1, 1, -1.8);
+    container.rotation.x = 0.35;
+    scene.scene.add(container);
+
+    const logText = new ThreeMeshUI.Text({
+        content: "log",
+        fontSize: 0.04,
+    });
+    container.add(logText);
+
+    scene.logger = new Logger(logText);
 }
 
 function setupDebugUI(scene, controller) {

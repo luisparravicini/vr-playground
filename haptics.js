@@ -8,8 +8,7 @@ const oscillators = [];
 let audioCtx = null;
 
 export class HapticsSample {
-    init(scene, curControllers) {
-        controllers = curControllers;
+    init(scene, controllers) {
         group = initBars(scene);
 
         [controllers.left, controllers.right].forEach(controller => {
@@ -27,7 +26,7 @@ export class HapticsSample {
 function initBars(scene) {
     const group = new THREE.Group();
     group.position.z = - 0.5;
-    scene.add(group);
+    scene.scene.add(group);
     const BOXES = 10;
 
     for (let i = 0; i < BOXES; i++) {

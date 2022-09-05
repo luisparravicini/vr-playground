@@ -3,7 +3,6 @@ import * as THREE from 'three';
 let raycaster;
 const intersected = [];
 const tempMatrix = new THREE.Matrix4();
-let controllers;
 let group;
 let line;
 const MaxLineScale = 5;
@@ -32,7 +31,7 @@ export class ObjectDragger {
 
 function initDragObjects(scene) {
     let group = new THREE.Group();
-    scene.add(group);
+    scene.scene.add(group);
 
     const geometries = [
         new THREE.BoxGeometry(0.2, 0.2, 0.2),
@@ -135,7 +134,7 @@ function cleanIntersected() {
 }
 
 
-export function render(controllers) {
+export function render(_scene, controllers) {
     cleanIntersected();
 
     intersectObjects(controllers.left.controller);

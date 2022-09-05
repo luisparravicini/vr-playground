@@ -10,14 +10,18 @@ import { ControllersManager } from './controllers.js';
 import * as UI from './ui.js';
 
 let stats;
-let camera, scene, renderer;
+let scene = {
+    camera: null,
+    scene: null,
+    renderer: null,
+}
 let renderCallbacks = [];
 let enterVRCallbacks = [];
 
 
 const controllersManager = init();
 const controllers = controllersManager.controllers;
-renderer.setAnimationLoop(render);
+scene.renderer.setAnimationLoop(render);
 
 setupSample(new ObjectDragger());
 setupSample(new HapticsSample());
@@ -39,13 +43,13 @@ function init() {
     stats = new Stats();
     container.appendChild(stats.dom);
 
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x808080);
+    scene.scene = new THREE.Scene();
+    scene.scene.background = new THREE.Color(0x808080);
 
-    camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 20);
-    camera.position.set(0, 1.6, 3);
+    scene.camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 20);
+    scene.camera.position.set(0, 1.6, 3);
 
-    const controls = new OrbitControls(camera, container);
+    const controls = new OrbitControls(scene.camera, container);
     controls.target.set(0, 1.6, 0);
     controls.update();
 
@@ -53,28 +57,28 @@ function init() {
 
     loadEarth();
 
-    renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.outputEncoding = THREE.sRGBEncoding;
-    renderer.shadowMap.enabled = true;
-    container.appendChild(renderer.domElement);
+    scene.renderer = new THREE.WebGLRenderer({ antialias: true });
+    scene.renderer.setPixelRatio(window.devicePixelRatio);
+    scene.renderer.setSize(window.innerWidth, window.innerHeight);
+    scene.renderer.outputEncoding = THREE.sRGBEncoding;
+    scene.renderer.shadowMap.enabled = true;
+    container.appendChild(scene.renderer.domElement);
 
     window.addEventListener('resize', onWindowResize);
 
-    return setupXR();
+    return setupXR(scene);
 }
 
-function setupXR() {
-    renderer.xr.enabled = true;
-    document.body.appendChild(VRButton.createButton(renderer));
+function setupXR(scene) {
+    scene.renderer.xr.enabled = true;
+    document.body.appendChild(VRButton.createButton(scene.renderer));
 
     document.getElementById('VRButton').addEventListener('click', () => {
         enterVRCallbacks.forEach(callback => callback());
     });
 
     const controllersManager = new ControllersManager();
-    controllersManager.setup(scene, renderer);
+    controllersManager.setup(scene);
     return controllersManager;
 
 }
@@ -89,9 +93,9 @@ function setupScene() {
     const floor = new THREE.Mesh(floorGeometry, floorMaterial);
     floor.rotation.x = - Math.PI / 2;
     floor.receiveShadow = true;
-    scene.add(floor);
+    scene.scene.add(floor);
 
-    scene.add(new THREE.HemisphereLight(0x808080, 0x606060));
+    scene.scene.add(new THREE.HemisphereLight(0x808080, 0x606060));
 
     const light = new THREE.DirectionalLight(0xffffff);
     light.position.set(0, 6, 0);
@@ -101,7 +105,7 @@ function setupScene() {
     light.shadow.camera.right = 2;
     light.shadow.camera.left = - 2;
     light.shadow.mapSize.set(4096, 4096);
-    scene.add(light);
+    scene.scene.add(light);
 }
 
 function loadEarth() {
@@ -114,7 +118,7 @@ function loadEarth() {
         const model = gltf.scene;
         model.position.set(0, 1, -5);
         model.scale.set(0.01, 0.01, 0.01);
-        scene.add(model);
+        scene.scene.add(model);
 
         // TODO: play cloud animations
         // mixer = new THREE.AnimationMixer( model );
@@ -136,10 +140,10 @@ function onWindowResize() {
 
 function render() {
     controllersManager.update();
-    renderCallbacks.forEach(r => r(controllers));
+    renderCallbacks.forEach(r => r(scene, controllers));
 
-    UI.update(controllers);
+    UI.update(scene, controllers);
     stats.update();
 
-    renderer.render(scene, camera);
+    scene.renderer.render(scene.scene, scene.camera);
 }

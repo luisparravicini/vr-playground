@@ -14,6 +14,7 @@ import TWEEN from '@tweenjs';
 let stats;
 let scene = {
     camera: null,
+    cameraGroup: null,
     scene: null,
     renderer: null,
     logger: null,
@@ -26,14 +27,15 @@ let enterVRCallbacks = [];
 const controllersManager = init(scene);
 const controllers = controllersManager.controllers;
 
-// for testing
-window.controllers = controllers;
-
 scene.renderer.setAnimationLoop(render);
 
 setupSample(new ObjectDragger());
 setupSample(new HapticsSample());
-setupSample(new Teleport());
+const teleport = new Teleport();
+setupSample(teleport);
+// for testing
+window.vrplayground = { teleport, controllers };
+
 UI.setup(scene, controllers);
 
 
@@ -57,6 +59,9 @@ function init() {
 
     scene.camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 20);
     scene.camera.position.set(0, 1.6, 3);
+
+    scene.cameraGroup = new THREE.Group();
+    scene.cameraGroup.add(scene.camera);
 
     const controls = new OrbitControls(scene.camera, container);
     controls.target.set(0, 1.6, 0);

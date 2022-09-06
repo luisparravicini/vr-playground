@@ -10,8 +10,7 @@ import TWEEN from '@tweenjs';
 
 let blinkerSphere;
 
-function locomotion(offset) {
-
+function locomotion(offset, camera) {
     blinkerSphere.visible = true;
     blinkerSphere.material.opacity = 0;
     new TWEEN.Tween(blinkerSphere.material)
@@ -20,7 +19,7 @@ function locomotion(offset) {
         .onComplete(function () {
 
             // Do the teleport
-            cameraGroup.position.add(offset);
+            camera.position.add(offset);
 
             // Fade back
             new TWEEN.Tween(blinkerSphere.material)

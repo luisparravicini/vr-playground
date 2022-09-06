@@ -60,38 +60,48 @@ const guideSprite = new Mesh(
 );
 guideSprite.rotation.x = -Math.PI / 2;
 
-let guidingController = null;
-function onSelectStart(e) {
+export class Teleport {
+    init(scene, controllers) {
+        this.scene = scene;
+        this.guidingController = null;
 
-    // This is e.data is an XRInputSource and if 
-    // it has a hand and being handled by hand tracking so do nothing
-    if (e && e.data && e.data.hand) {
-        return;
+        controllers.left.events.addEventListener('axes-y-moveMiddle', (event) => { this.handleUp(event); });
+        controllers.left.events.addEventListener('axes-y-moveEnd', (event) => { this.handleUpEnd(event); });
+
+        controllers.right.events.addEventListener('axes-x-moveMiddle', (event) => { this.handleRotation(event) });
+
+        setupFade(scene);
+
+        return {
+            render: () => { this.render(); },
+        }
     }
 
-    const controller = this;
+    handleUp({ detail }) {
+        this.scene.logger.info("pre startGuide", detail);
 
-    console.log("startGuide", controller);
+        if (detail.value > 0) {
+            this.scene.logger.info("startGuide", detail);
+            this.guidingController = detail.controller;
 
-    guidingController = controller;
-    guideLight.intensity = 1;
-    controller.add(guideline);
-    scene.add(guideSprite);
-}
+            guideLight.intensity = 1;
+            this.guidingController.add(guideline);
+            this.scene.scene.add(guideSprite);
+        }
+    }
 
-function onSelectEnd() {
-    if (guidingController === this) {
-        console.log("onSelectEnd", this);
+    handleUpEnd({ detail }) {
+        this.scene.logger.info("onSelectEnd", detail.controller);
 
         // first work out vector from feet to cursor
 
         // feet position
-        const feetPos = renderer.xr.getCamera(camera).getWorldPosition(tempVec);
+        const feetPos = this.scene.renderer.xr.getCamera(this.scene.camera).getWorldPosition(tempVec);
         feetPos.y = 0;
 
         // cursor position
-        const p = guidingController.getWorldPosition(tempVecP);
-        const v = guidingController.getWorldDirection(tempVecV);
+        const p = this.guidingController.getWorldPosition(tempVecP);
+        const v = this.guidingController.getWorldDirection(tempVecV);
         v.multiplyScalar(6);
         const t = (-v.y + Math.sqrt(v.y ** 2 - 2 * p.y * g.y)) / g.y;
         const cursorPos = positionAtT(tempVec1, t, p, v, g);
@@ -100,45 +110,16 @@ function onSelectEnd() {
         const offset = cursorPos.addScaledVector(feetPos, -1);
 
         // Do the locomotion
-        locomotion(offset);
+        locomotion(offset, this.scene.camera);
 
         // clean up
-        guidingController = null;
         guideLight.intensity = 0;
-        this.remove(guideline);
-        scene.remove(guideSprite);
-    }
-}
-
-function handleUp({ detail }) {
-    if (detail.value < 0) {
-        onSelectStart.bind(detail.controller)();
-    }
-}
-function handleUpEnd({ detail }) {
-    onSelectEnd.bind(detail.controller)();
-}
-
-export class Teleport {
-    init(scene, controllers) {
-        this.scene = scene;
-
-        const events = controllers.left.events;
-        events.addEventListener('axes-y-moveMiddle', handleUp);
-        events.addEventListener('axes-y-moveEnd', handleUpEnd);
-        events.addEventListener('selectstart', onSelectStart);
-        events.addEventListener('selectend', onSelectEnd);
-
-        controllers.right.events.addEventListener('axes-x-moveMiddle', (event) => { this.handleMove(event) });
-
-        setupFade(scene);
-
-        return {
-            render: render,
-        }
+        this.guidingController.remove(guideline);
+        this.guidingController = null;
+        this.scene.scene.remove(guideSprite);
     }
 
-    handleMove({ detail }) {
+    handleRotation({ detail }) {
         let delta = (detail.value > 0 ? -1 : 1);
         let offset = delta * Math.PI / 4;
 
@@ -152,39 +133,40 @@ export class Teleport {
                 cam.rotation.y += offset;
             });
         } else {
-            this.scene.camera.rotation.y += offset;
+            this.scene.cameraGroup.rotation.y += offset;
         }
     }
 
-}
 
-function render() {
-    if (!guidingController)
-        return;
+    render() {
+        if (this.guidingController == null)
+            return;
 
-    // Controller start position
-    const p = guidingController.getWorldPosition(tempVecP);
+        // Controller start position
+        const p = this.guidingController.getWorldPosition(tempVecP);
 
-    // Set Vector V to the direction of the controller, at 1m/s
-    const v = guidingController.getWorldDirection(tempVecV);
+        // Set Vector V to the direction of the controller, at 1m/s
+        const v = this.guidingController.getWorldDirection(tempVecV);
 
-    // Scale the initial velocity to 6m/s
-    v.multiplyScalar(6);
+        // Scale the initial velocity to 6m/s
+        v.multiplyScalar(6);
 
-    // Time for tele ball to hit ground
-    const t = (-v.y + Math.sqrt(v.y ** 2 - 2 * p.y * g.y)) / g.y;
+        // Time for tele ball to hit ground
+        const t = (-v.y + Math.sqrt(v.y ** 2 - 2 * p.y * g.y)) / g.y;
 
-    const vertex = tempVec.set(0, 0, 0);
-    for (let i = 1; i <= lineSegments; i++) {
+        const vertex = tempVec.set(0, 0, 0);
+        for (let i = 1; i <= lineSegments; i++) {
 
-        // set vertex to current position of the virtual ball at time t
-        positionAtT(vertex, i * t / lineSegments, p, v, g);
-        guidingController.worldToLocal(vertex);
-        vertex.toArray(lineGeometryVertices, i * 3);
+            // set vertex to current position of the virtual ball at time t
+            positionAtT(vertex, i * t / lineSegments, p, v, g);
+            this.guidingController.worldToLocal(vertex);
+            vertex.toArray(lineGeometryVertices, i * 3);
+        }
+        guideline.geometry.attributes.position.needsUpdate = true;
+
+        // Place the light and sprite near the end of the line
+        positionAtT(guideLight.position, t * 0.98, p, v, g);
+        positionAtT(guideSprite.position, t * 0.98, p, v, g);
     }
-    guideline.geometry.attributes.position.needsUpdate = true;
 
-    // Place the light and sprite near the end of the line
-    positionAtT(guideLight.position, t * 0.98, p, v, g);
-    positionAtT(guideSprite.position, t * 0.98, p, v, g);
 }

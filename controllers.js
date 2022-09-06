@@ -109,15 +109,16 @@ class Controller {
         let name = Object.keys(objects).find(name => objects[name] == index);
         if (!name) {
             // This shouldn't happen
-            console.log(`${eventType} ${index} not found`);
+            this.scene.logger.error(`${eventType} ${index} not found`);
             return;
         }
         const eventName = eventNameTemplate.replace('$name', name);
+        if (!detail) {
+            detail = {};
+        }
+        detail.controller = this;
         const event = new CustomEvent(eventName, { detail: detail });
-
-        console.log(`${this.name}:${event.type} fired`, detail);
         this.scene.logger.info(`${this.name}:${event.type} fired`, detail);
-
         this.events.dispatchEvent(event);
     }
 

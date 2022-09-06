@@ -46,7 +46,19 @@ class Logger {
         this.maxLines = 20;
     }
 
-    info(message) {
+    error(...args) {
+        this.info(args);
+    }
+
+    info(...args) {
+        console.log('logger', ...args);
+
+        let message = "";
+        for (const arg of args) {
+            if (message != "")
+                message += ", ";
+            message += arg;
+        }
         this.lines.push(message);
 
         if (this.lines.length > this.maxLines)
@@ -60,6 +72,7 @@ function setupLogUI(scene) {
     container.set({
         width: 0.9,
         height: 1.5,
+        textAlign: 'left',
     });
     container.position.set(1, 1, -1.8);
     container.rotation.x = 0.35;

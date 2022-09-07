@@ -1,6 +1,10 @@
-This is a playground to learn threejs + XR.
+__This project has some funcitonality that works and some that is unfinished (see below). It was started as an exploration on how to use three js + XR.__
 
-It's a mashup of own code, some three js examples, some code from [xr-locomotion-start](https://github.com/SamsungInternet/xr-locomotion-starter), the ui is done with [three-mesh-ui](https://github.com/felixmariotto/three-mesh-ui) and there are some other snippets around.
+It's a mashup of my own code and the modified code of:
+  - threejs example on using haptics
+  - threejs example on dragging objects
+  - some general ui and a ui attached to the left controller using [three-mesh-ui](https://github.com/felixmariotto/three-mesh-ui)
+  - __unfinished__ integration of teleport locomotion and camera rotation using the code from [xr-locomotion-start](https://github.com/SamsungInternet/xr-locomotion-starter)
 
 It was tested with a Quest 2.
 
@@ -24,3 +28,13 @@ To use it:
 - Make the log do a JSON.stringify on the objects being logged
 - Make the debug menu buttons do something
 - Replace current drag line selection with line and circle at end from https://github.com/felixmariotto/three-mesh-ui
+
+
+## Note to self
+To test locomotion interactions with devtools:
+
+enter VR: `document.getElementById('VRButton').click()`
+
+start teleport: `window.vrplayground.teleport.handleUp({detail:{value:1,controller: window.vrplayground.controllers.left.controller}});`
+
+finish teleport: `window.vrplayground.teleport.handleUpEnd({detail:{value:0,controller: window.vrplayground.controllers.left.controller}});`
